@@ -127,7 +127,7 @@ final class QueryUtils {
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject movie = results.getJSONObject(i);
                     String id = movie.getString("id");
-                    String title = movie.getString("original_title");
+                    String title = movie.getString("title");
                     String posterUrl = movie.getString("poster_path");
                     String synopsis = movie.getString("overview");
                     String rating = movie.getString("vote_average");

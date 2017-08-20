@@ -17,7 +17,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieItemClickListener, LoaderManager.LoaderCallbacks<List<Movie>> {
 
-    private final static String REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?api_key=788da7e2e8ea7beb70d996b49ca373e6&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1";
+    private final static String REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?language=en-US&include_adult=false&include_video=false&page=1&api_key=788da7e2e8ea7beb70d996b49ca373e6&sort_by=vote_average.desc";
+    private final static String NEW_REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?api_key=788da7e2e8ea7beb70d996b49ca373e6&language=en-US&sort_by=vote_average.desc&include_adult=false&include_video=false&page=1&vote_count.gte=1000";
     private static final int MOVIES_LOADER_ID = 1;
 
     private RecyclerView mRecyclerView;
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     @Override
     public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
-        return new MovieLoader(this, REQUEST_URL);
+        return new MovieLoader(this, NEW_REQUEST_URL);
     }
 
     @Override
@@ -69,7 +70,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     @Override
     public void onMovieItemClick(Movie clickedMovie) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://image.tmdb.org/t/p/w342" + clickedMovie.getPosterUrl()));
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("movie", clickedMovie);
         startActivity(intent);
     }
 }
