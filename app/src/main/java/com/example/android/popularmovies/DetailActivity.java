@@ -7,8 +7,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -32,7 +30,7 @@ public class DetailActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        mMovie = getIntent().getExtras().getParcelable("movie");
+        mMovie = getIntent().getExtras().getParcelable(MainActivity.MOVIE_OBJECT_STRING);
         setTitle(mMovie.getTitle());
 
         Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);

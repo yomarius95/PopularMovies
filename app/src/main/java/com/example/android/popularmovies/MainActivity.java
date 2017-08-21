@@ -9,17 +9,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieItemClickListener, LoaderManager.LoaderCallbacks<List<Movie>> {
 
-    private final static String REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?language=en-US&include_adult=false&include_video=false&page=1&api_key=788da7e2e8ea7beb70d996b49ca373e6&sort_by=vote_average.desc";
-    private final static String NEW_REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?api_key=788da7e2e8ea7beb70d996b49ca373e6&language=en-US&sort_by=vote_average.desc&include_adult=false&include_video=false&page=1&vote_count.gte=1000";
+    private final static String REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?language=en-US&include_adult=false&include_video=false&page=1";
+    private final static String API_KEY_STRING = "788da7e2e8ea7beb70d996b49ca373e6";
+    private final static String API_KEY_KEY = "api_key";
+    private final static String SORT_BY_KEY = "sort_by";
+    private final static String SORT_BY_RATING = "vote_average.desc";
+    private final static String VOTE_COUNT_KEY = "vote_count.gte";
+    private final static String VOTE_COUNT_VALUE = "5000";
+    public final static String MOVIE_OBJECT_STRING = "movie";
     private static final int MOVIES_LOADER_ID = 1;
+
+    private boolean sortByVote = false;
+    private LoaderManager loaderManager;
 
     private RecyclerView mRecyclerView;
     private MovieAdapter mMovieAdapter;
@@ -49,13 +62,52 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             }
         });
 
-        LoaderManager loaderManager = getLoaderManager();
+        loaderManager = getLoaderManager();
         loaderManager.initLoader(MOVIES_LOADER_ID, null, this);
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.sort_menu, menu);
+        MenuItem item = menu.findItem(R.id.sort_menu);
+        Spinner spinner = (Spinner) item.getActionView();
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, getResources().getStringArray(R.array.order));
+        spinnerArrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        spinner.setAdapter(spinnerArrayAdapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                switch (i) {
+                    case 1:
+                        sortByVote = true;
+                        break;
+                    default:
+                        sortByVote = false;
+                        break;
+                }
+                loaderManager.restartLoader(MOVIES_LOADER_ID, null, MainActivity.this);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {}
+        });
+        return true;
+    }
+
+    @Override
     public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
-        return new MovieLoader(this, NEW_REQUEST_URL);
+
+        Uri baseUri = Uri.parse(REQUEST_URL);
+        Uri.Builder uriBuilder = baseUri.buildUpon();
+
+        uriBuilder.appendQueryParameter(API_KEY_KEY, API_KEY_STRING);
+
+        if(sortByVote) {
+            uriBuilder.appendQueryParameter(SORT_BY_KEY, SORT_BY_RATING);
+            uriBuilder.appendQueryParameter(VOTE_COUNT_KEY, VOTE_COUNT_VALUE);
+        }
+
+        return new MovieLoader(this, uriBuilder.toString());
     }
 
     @Override
@@ -71,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     @Override
     public void onMovieItemClick(Movie clickedMovie) {
         Intent intent = new Intent(this, DetailActivity.class);
-        intent.putExtra("movie", clickedMovie);
+        intent.putExtra(MOVIE_OBJECT_STRING, clickedMovie);
         startActivity(intent);
     }
 }
