@@ -1,9 +1,12 @@
 package com.example.android.popularmovies;
 
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,10 +17,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieItemClickListener, LoaderManager.LoaderCallbacks<List<Movie>> {
 
@@ -33,16 +41,23 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     private boolean sortByVote = false;
     private LoaderManager loaderManager;
-
-    private RecyclerView mRecyclerView;
+    private ConnectivityManager cm;
+    private NetworkInfo activeNetwork;
     private MovieAdapter mMovieAdapter;
+
+    @BindView(R.id.loading_spinner)
+    ProgressBar loadingSpinner;
+    @BindView(R.id.empty_view)
+    TextView emptyView;
+    @BindView(R.id.rv_movie_grid)
+    RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_movie_grid);
         mRecyclerView.setHasFixedSize(true);
 
         if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
@@ -62,8 +77,20 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             }
         });
 
+        cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+
         loaderManager = getLoaderManager();
-        loaderManager.initLoader(MOVIES_LOADER_ID, null, this);
+
+        if(isConnected) {
+            loaderManager.initLoader(MOVIES_LOADER_ID, null, this);
+        } else {
+            loadingSpinner.setVisibility(View.GONE);
+            emptyView.setText(R.string.no_internet);
+            emptyView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -85,7 +112,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                         sortByVote = false;
                         break;
                 }
-                loaderManager.restartLoader(MOVIES_LOADER_ID, null, MainActivity.this);
+                activeNetwork = cm.getActiveNetworkInfo();
+                if(activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+                    emptyView.setVisibility(View.GONE);
+                    loadingSpinner.setVisibility(View.VISIBLE);
+                    loaderManager.restartLoader(MOVIES_LOADER_ID, null, MainActivity.this);
+                } else {
+                    mRecyclerView.setVisibility(View.GONE);
+                    loadingSpinner.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyView.setText(R.string.no_internet);
+                }
             }
 
             @Override
@@ -113,6 +150,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     @Override
     public void onLoadFinished(Loader<List<Movie>> loader, List<Movie> movies) {
         mMovieAdapter.setMovieData((ArrayList<Movie>) movies);
+        mRecyclerView.setVisibility(View.VISIBLE);
+        loadingSpinner.setVisibility(View.GONE);
     }
 
     @Override

@@ -12,16 +12,16 @@ import butterknife.ButterKnife;
 
 public class DetailActivity extends AppCompatActivity {
 
-    private Movie mMovie;
-
     @BindView(R.id.detail_background_image)
     ImageView background;
     @BindView(R.id.detail_tv_title)
     TextView title;
-    @BindView(R.id.detail_tv_release_date) TextView releaseDate;
+    @BindView(R.id.detail_tv_release_date)
+    TextView releaseDate;
     @BindView(R.id.detail_tv_vote_average)
     TextView voteAverage;
-    @BindView(R.id.detail_tv_synopsis) TextView synopsis;
+    @BindView(R.id.detail_tv_synopsis)
+    TextView synopsis;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +30,8 @@ public class DetailActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        mMovie = getIntent().getExtras().getParcelable(MainActivity.MOVIE_OBJECT_STRING);
+        Movie mMovie = getIntent().getExtras().getParcelable(MainActivity.MOVIE_OBJECT_STRING);
+        assert mMovie != null;
         setTitle(mMovie.getTitle());
 
         Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);

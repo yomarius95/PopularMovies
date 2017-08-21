@@ -44,7 +44,7 @@ public class Movie implements Parcelable {
         return mReleaseDate;
     }
 
-    protected Movie(Parcel in) {
+    private Movie(Parcel in) {
         mId = in.readString();
         mTitle = in.readString();
         mPosterUrl = in.readString();
