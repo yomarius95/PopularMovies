@@ -6,14 +6,12 @@
 
     <ImageView
         android:id="@+id/iv_movie"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_margin="@dimen/movie_grid_item_margin"
-        android:background="@color/colorAccent"
+        android:adjustViewBounds="true"
+        android:padding="@dimen/movie_grid_item_padding"
         android:clickable="true"
-        android:elevation="@dimen/movie_grid_item_elevation"
-        android:foreground="@drawable/poster_ripple"
-        android:stateListAnimator="@animator/poster_raise" />
+        android:foreground="@drawable/poster_ripple" />
 
 </LinearLayout>

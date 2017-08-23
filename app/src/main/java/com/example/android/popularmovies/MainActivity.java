@@ -29,21 +29,20 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieItemClickListener, LoaderManager.LoaderCallbacks<List<Movie>> {
 
-    private final static String REQUEST_URL = "https://api.themoviedb.org/3/discover/movie?language=en-US&include_adult=false&include_video=false&page=1";
-    private final static String API_KEY_STRING = "788da7e2e8ea7beb70d996b49ca373e6";
-    private final static String API_KEY_KEY = "api_key";
-    private final static String SORT_BY_KEY = "sort_by";
-    private final static String SORT_BY_RATING = "vote_average.desc";
-    private final static String VOTE_COUNT_KEY = "vote_count.gte";
-    private final static String VOTE_COUNT_VALUE = "5000";
-    public final static String MOVIE_OBJECT_STRING = "movie";
+    private static final String TOP_RATED_REQUEST_URL = "http://api.themoviedb.org/3/movie/top_rated";
+    private static final String POPULAR_REQUEST_URL = "https://api.themoviedb.org/3/movie/popular";
+    private static final String API_KEY_KEY = "api_key";
+    public static final String MOVIE_OBJECT_STRING = "movie";
     private static final int MOVIES_LOADER_ID = 1;
+    private static final String SORT_BY = "sort";
 
-    private boolean sortByVote = false;
+    private boolean sortByRating = false;
     private LoaderManager loaderManager;
     private ConnectivityManager cm;
     private NetworkInfo activeNetwork;
     private MovieAdapter mMovieAdapter;
+    private int spinnerPosition = -1;
+    private Spinner spinner;
 
     @BindView(R.id.loading_spinner)
     ProgressBar loadingSpinner;
@@ -57,6 +56,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        if (savedInstanceState != null) {
+            spinnerPosition = savedInstanceState.getInt(SORT_BY);
+        }
 
         mRecyclerView.setHasFixedSize(true);
 
@@ -97,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.sort_menu, menu);
         MenuItem item = menu.findItem(R.id.sort_menu);
-        Spinner spinner = (Spinner) item.getActionView();
+        spinner = (Spinner) item.getActionView();
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, getResources().getStringArray(R.array.order));
         spinnerArrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner.setAdapter(spinnerArrayAdapter);
@@ -106,10 +109,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case 1:
-                        sortByVote = true;
+                        sortByRating = true;
                         break;
                     default:
-                        sortByVote = false;
+                        sortByRating = false;
                         break;
                 }
                 activeNetwork = cm.getActiveNetworkInfo();
@@ -128,21 +131,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
+
+        if (spinnerPosition != -1) {
+            spinner.setSelection(spinnerPosition);
+        }
         return true;
     }
 
     @Override
     public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
+        Uri baseUri;
 
-        Uri baseUri = Uri.parse(REQUEST_URL);
+        if (sortByRating) {
+            baseUri = Uri.parse(TOP_RATED_REQUEST_URL);
+        } else {
+            baseUri = Uri.parse(POPULAR_REQUEST_URL);
+        }
         Uri.Builder uriBuilder = baseUri.buildUpon();
 
-        uriBuilder.appendQueryParameter(API_KEY_KEY, API_KEY_STRING);
-
-        if(sortByVote) {
-            uriBuilder.appendQueryParameter(SORT_BY_KEY, SORT_BY_RATING);
-            uriBuilder.appendQueryParameter(VOTE_COUNT_KEY, VOTE_COUNT_VALUE);
-        }
+        uriBuilder.appendQueryParameter(API_KEY_KEY, BuildConfig.THE_MOVIE_DB_API_TOKEN);
 
         return new MovieLoader(this, uriBuilder.toString());
     }
@@ -164,5 +171,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(MOVIE_OBJECT_STRING, clickedMovie);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SORT_BY, spinner.getSelectedItemPosition());
     }
 }

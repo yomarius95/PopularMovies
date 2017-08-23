@@ -1,5 +1,6 @@
 package com.example.android.popularmovies;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -30,15 +31,20 @@ public class DetailActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        Movie mMovie = getIntent().getExtras().getParcelable(MainActivity.MOVIE_OBJECT_STRING);
-        assert mMovie != null;
-        setTitle(mMovie.getTitle());
+        Intent intent = getIntent();
+        if(intent != null && intent.hasExtra(MainActivity.MOVIE_OBJECT_STRING)) {
 
-        Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);
+            Movie mMovie = intent.getExtras().getParcelable(MainActivity.MOVIE_OBJECT_STRING);
+            assert mMovie != null;
+            setTitle(mMovie.getTitle());
 
-        title.setText(mMovie.getTitle());
-        releaseDate.setText(mMovie.getReleaseDate());
-        voteAverage.setText(mMovie.getRating());
-        synopsis.setText(mMovie.getSynopsis());
+            Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);
+
+            title.setText(mMovie.getTitle());
+            releaseDate.append(" " + mMovie.getReleaseDate());
+            voteAverage.append(" " + mMovie.getRating());
+            synopsis.setText(mMovie.getSynopsis());
+
+        }
     }
 }
