@@ -9,10 +9,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_margin="16dp"
+        android:layout_margin="@dimen/movie_grid_item_margin"
         android:background="@color/colorAccent"
         android:clickable="true"
-        android:elevation="2dp"
+        android:elevation="@dimen/movie_grid_item_elevation"
         android:foreground="@drawable/poster_ripple"
         android:stateListAnimator="@animator/poster_raise" />
 
