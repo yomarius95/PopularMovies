@@ -1,5 +1,6 @@
 package com.example.android.popularmovies;
 
+import android.app.ActivityOptions;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
@@ -10,13 +11,14 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -64,10 +66,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mRecyclerView.setHasFixedSize(true);
 
         if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
-            mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+            mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         }
         else{
-            mRecyclerView.setLayoutManager(new GridLayoutManager(this, 4));
+            mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
         }
 
         mMovieAdapter = new MovieAdapter(this, this);
@@ -167,10 +169,16 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     }
 
     @Override
-    public void onMovieItemClick(Movie clickedMovie) {
+    public void onMovieItemClick(Movie clickedMovie, ImageView sharedImageView) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(MOVIE_OBJECT_STRING, clickedMovie);
-        startActivity(intent);
+        Bundle bundle = ActivityOptions
+                .makeSceneTransitionAnimation(
+                        this,
+                        sharedImageView,
+                        sharedImageView.getTransitionName())
+                .toBundle();
+        startActivity(intent, bundle);
     }
 
     @Override

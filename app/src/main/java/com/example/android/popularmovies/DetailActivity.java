@@ -1,8 +1,11 @@
 package com.example.android.popularmovies;
 
 import android.content.Intent;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,6 +26,10 @@ public class DetailActivity extends AppCompatActivity {
     TextView voteAverage;
     @BindView(R.id.detail_tv_synopsis)
     TextView synopsis;
+    @BindView(R.id.fab_favorite)
+    FloatingActionButton favorite;
+
+    private boolean isFavorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +52,22 @@ public class DetailActivity extends AppCompatActivity {
             voteAverage.append(" " + mMovie.getRating());
             synopsis.setText(mMovie.getSynopsis());
 
+            Log.i("DetailActivity.java", mMovie.getId());
         }
+
+        favorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isFavorite) {
+                    // delete from database
+                    Log.i("DetailActivity.java", String.valueOf(isFavorite));
+                    isFavorite = false;
+                } else {
+                    // save in database
+                    Log.i("DetailActivity.java", String.valueOf(isFavorite));
+                    isFavorite = true;
+                }
+            }
+        });
     }
 }

@@ -11,18 +11,18 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {
+class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHolder> {
 
     private Context mContext;
     private ArrayList<Movie> mMovies;
 
     private final MovieItemClickListener mClickHandler;
 
-    public interface MovieItemClickListener {
-        void onMovieItemClick(Movie clickedMovie);
+    interface MovieItemClickListener {
+        void onMovieItemClick(Movie clickedMovie, ImageView sharedImageView);
     }
 
-    public MovieAdapter(Context context, MovieItemClickListener listener) {
+    MovieAdapter(Context context, MovieItemClickListener listener) {
         mContext = context;
         mClickHandler = listener;
     }
@@ -47,11 +47,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
         return mMovies.size();
     }
 
-    public class MovieAdapterViewHolder extends RecyclerView.ViewHolder
+    class MovieAdapterViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
-        public final ImageView mImageView;
+        final ImageView mImageView;
 
-        public MovieAdapterViewHolder(View view) {
+        MovieAdapterViewHolder(View view) {
             super(view);
             mImageView = view.findViewById(R.id.iv_movie);
             mImageView.setOnClickListener(this);
@@ -60,16 +60,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapter
         @Override
         public void onClick(View view) {
             int clickedPosition = getAdapterPosition();
-            mClickHandler.onMovieItemClick(mMovies.get(clickedPosition));
+            ImageView imageView = (ImageView) view;
+            mClickHandler.onMovieItemClick(mMovies.get(clickedPosition), imageView);
         }
     }
 
-    public void setMovieData(ArrayList<Movie> movieData) {
+    void setMovieData(ArrayList<Movie> movieData) {
         mMovies = movieData;
         notifyDataSetChanged();
     }
 
-    public void resetMovieData() {
+    void resetMovieData() {
         mMovies = null;
     }
 }

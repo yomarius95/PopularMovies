@@ -7,11 +7,12 @@
     <ImageView
         android:id="@+id/iv_movie"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
         android:padding="@dimen/movie_grid_item_padding"
         android:clickable="true"
+        android:transitionName="@string/transition_image"
         android:foreground="@drawable/poster_ripple" />
 
 </LinearLayout>

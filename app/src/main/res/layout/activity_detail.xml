@@ -9,6 +9,7 @@
         android:id="@+id/detail_background_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:transitionName="@string/transition_image"
         android:scaleType="centerCrop"/>
 
     <View
@@ -57,4 +58,12 @@
             </LinearLayout>
         </RelativeLayout>
     </ScrollView>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_favorite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"/>
+
 </FrameLayout>
