@@ -35,6 +35,32 @@ final class QueryUtils {
         return extractMoviesFromJson(jsonResponse);
     }
 
+    static ArrayList<Review> fetchReviewsData(String requestUrl) {
+        URL url = createUrl(requestUrl);
+
+        String jsonResponse = null;
+        try {
+            jsonResponse = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error closing input stream", e);
+        }
+
+        return extractReviewsFromJson(jsonResponse);
+    }
+
+    static ArrayList<Trailer> fetchTrailerData(String requestUrl) {
+        URL url = createUrl(requestUrl);
+
+        String jsonResponse = null;
+        try {
+            jsonResponse = makeHttpRequest(url);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error closing input stream", e);
+        }
+
+        return extractTrailersFromJson(jsonResponse);
+    }
+
     /**
      * Returns new URL object from the given string URL.
      */
@@ -120,7 +146,6 @@ final class QueryUtils {
         ArrayList<Movie> movies = new ArrayList<>();
 
         try {
-
             JSONObject jsonObject = new JSONObject(movieJSON);
             if (jsonObject.optJSONArray("results") != null) {
                 JSONArray results = jsonObject.getJSONArray("results");
@@ -137,6 +162,67 @@ final class QueryUtils {
                 }
             }
             return movies;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the earthquake JSON results", e);
+        }
+        return null;
+    }
+
+    private static ArrayList<Review> extractReviewsFromJson(String reviewJSON) {
+        // If the JSON string is empty or null, then return early.
+        if (TextUtils.isEmpty(reviewJSON)) {
+            return null;
+        }
+
+        ArrayList<Review> reviews = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(reviewJSON);
+            if (jsonObject.optJSONArray("results") != null) {
+                JSONArray results = jsonObject.getJSONArray("results");
+                for (int i = 0; i < results.length(); i++) {
+                    JSONObject review = results.getJSONObject(i);
+                    String author = review.getString("author");
+                    String content = review.getString("content");
+                    String url = review.getString("url");
+
+                    reviews.add(new Review(author, content, url));
+                }
+            }
+            return reviews;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the earthquake JSON results", e);
+        }
+        return null;
+    }
+
+    private static ArrayList<Trailer> extractTrailersFromJson(String trailerJSON) {
+        // If the JSON string is empty or null, then return early.
+        if (TextUtils.isEmpty(trailerJSON)) {
+            return null;
+        }
+
+        ArrayList<Trailer> trailers = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(trailerJSON);
+            if (jsonObject.optJSONArray("results") != null) {
+                JSONArray results = jsonObject.getJSONArray("results");
+                int maxTrailers;
+                if(results.length() > 3) {
+                    maxTrailers = 3;
+                } else {
+                    maxTrailers = results.length();
+                }
+                for (int i = 0; i < maxTrailers; i++) {
+                    JSONObject trailer = results.getJSONObject(i);
+                    String name = trailer.getString("name");
+                    String key = trailer.getString("key");
+
+                    trailers.add(new Trailer(name, key));
+                }
+            }
+            return trailers;
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem parsing the earthquake JSON results", e);
         }
