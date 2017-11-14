@@ -3,9 +3,11 @@ package com.example.android.popularmovies;
 import android.app.ActivityOptions;
 import android.app.LoaderManager;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -22,10 +24,10 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import com.example.android.popularmovies.data.MovieContract.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private static final String API_KEY_KEY = "api_key";
     public static final String MOVIE_OBJECT_STRING = "movie";
     private static final int MOVIES_LOADER_ID = 1;
+    private static final int FAVORITES_LOADER_ID = 2;
     private static final String SORT_BY = "sort";
 
     private boolean sortByRating = false;
@@ -52,6 +55,61 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     TextView emptyView;
     @BindView(R.id.rv_movie_grid)
     RecyclerView mRecyclerView;
+
+    private LoaderManager.LoaderCallbacks<Cursor> favoritesLoaderListener
+            = new LoaderManager.LoaderCallbacks<Cursor>() {
+        @Override
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+            String[] projection = {
+                    FavoriteEntry._ID,
+                    FavoriteEntry.COLUMN_NAME_TITLE,
+                    FavoriteEntry.COLUMN_NAME_SYNOPSIS,
+                    FavoriteEntry.COLUMN_NAME_RATING,
+                    FavoriteEntry.COLUMN_NAME_RELEASE_DATE,
+                    FavoriteEntry.COLUMN_NAME_POSTER_URL
+            };
+
+            return new CursorLoader(MainActivity.this,
+                    FavoriteEntry.CONTENT_URI,
+                    projection,
+                    null,
+                    null,
+                    null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            ArrayList<Movie> movieList = new ArrayList<>();
+            while(cursor.moveToNext()){
+
+                int idColumnIndex = cursor.getColumnIndex(FavoriteEntry._ID);
+                int titleColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_TITLE);
+                int synopsisColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_SYNOPSIS);
+                int ratingColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_RATING);
+                int releaseDateColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_RELEASE_DATE);
+                int posterUrlColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_POSTER_URL);
+
+                int id = cursor.getInt(idColumnIndex);
+                String title = cursor.getString(titleColumnIndex);
+                String synopsis = cursor.getString(synopsisColumnIndex);
+                String rating = cursor.getString(ratingColumnIndex);
+                String releaseDate = cursor.getString(releaseDateColumnIndex);
+                String posterUrl = cursor.getString(posterUrlColumnIndex);
+
+                Movie movie = new Movie(String.valueOf(id), title, synopsis, rating, releaseDate, posterUrl);
+                movieList.add(movie);
+            }
+
+            mMovieAdapter.setMovieData(movieList);
+            mRecyclerView.setVisibility(View.VISIBLE);
+            loadingSpinner.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mMovieAdapter.resetMovieData();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +171,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                     case 1:
                         sortByRating = true;
                         break;
+                    case 2:
+                        emptyView.setVisibility(View.GONE);
+                        loadingSpinner.setVisibility(View.VISIBLE);
+                        loaderManager.initLoader(FAVORITES_LOADER_ID, null, favoritesLoaderListener);
+                        return;
                     default:
                         sortByRating = false;
                         break;

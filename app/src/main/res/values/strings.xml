@@ -1,8 +1,9 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Popular Movies</string>
     <string name="no_internet">No internet connection.</string>
     <string name="release_date_text">Release date: </string>
     <string name="rating_text">Rating: </string>
     <string name="transition_image">sharedtransition</string>
     <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla luctus maximus pharetra. Pellentesque a pretium enim. Maecenas suscipit, nisl sit amet eleifend accumsan, lectus dolor ullamcorper urna, at iaculis turpis velit sed urna. Aliquam pulvinar, sapien sit amet commodo luctus, ipsum odio malesuada ligula, non dignissim lorem est ac nisl. Suspendisse ut ultrices lorem, vel tincidunt enim. Mauris egestas, nisi sed dictum aliquam, nulla est dapibus turpis, ut placerat ligula lorem at enim. Nulla tincidunt lectus et malesuada posuere. Mauris ligula dolor, ornare vitae elementum in, tempor eu lectus. Curabitur at est ex. Cras aliquam, lorem ut luctus lobortis, elit turpis elementum enim, quis rhoncus odio erat sed mauris. Maecenas bibendum leo quis urna tincidunt, at venenatis lorem feugiat. Etiam eu feugiat nisl. Nunc auctor molestie sapien. Pellentesque sit amet faucibus tortor. Quisque vehicula maximus sagittis. Cras scelerisque ante sapien, eu iaculis lorem ornare vitae.</string>
+    <string name="movie_saved">Movie saved with id: <xliff:g id="_id" example="1">%d</xliff:g></string>
 </resources>

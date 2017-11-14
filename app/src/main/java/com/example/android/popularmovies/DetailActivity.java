@@ -1,5 +1,7 @@
 package com.example.android.popularmovies;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.app.LoaderManager;
@@ -9,26 +11,29 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.android.popularmovies.data.MovieContract.*;
 import com.squareup.picasso.Picasso;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-
 import static com.example.android.popularmovies.MainActivity.MOVIE_OBJECT_STRING;
 
 public class DetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerItemClickListener {
 
     private String movieId;
+    private boolean isFavorite = false;
+    private Movie mMovie;
 
-    private static final int REVIEWS_LOADER_ID = 2;
-    private static final int TRAILERS_LOADER_ID = 3;
+    private static final int REVIEWS_LOADER_ID = 3;
+    private static final int TRAILERS_LOADER_ID = 4;
 
     private static final String BASE_REQUEST_URL = "https://api.themoviedb.org/3/movie";
 
@@ -127,7 +132,7 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
         Intent intent = getIntent();
         if(intent != null && intent.hasExtra(MOVIE_OBJECT_STRING)) {
 
-            Movie mMovie = intent.getExtras().getParcelable(MOVIE_OBJECT_STRING);
+            mMovie = intent.getExtras().getParcelable(MOVIE_OBJECT_STRING);
             assert mMovie != null;
             setTitle(mMovie.getTitle());
             movieId = mMovie.getId();
@@ -145,6 +150,46 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
             Log.i("DetailActivity.java", mMovie.getId());
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.favorite_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.toggle_favorite:
+                if (isFavorite) {
+                    isFavorite = false;
+                    item.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                    //remove from database
+                } else {
+                    isFavorite = true;
+                    item.setIcon(R.drawable.ic_favorite_white_24dp);
+                    //insert in to database
+                    saveMovie();
+                }
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void saveMovie() {
+        ContentValues values = new ContentValues();
+        values.put(FavoriteEntry.COLUMN_NAME_TITLE, mMovie.getTitle());
+        values.put(FavoriteEntry.COLUMN_NAME_SYNOPSIS, mMovie.getSynopsis());
+        values.put(FavoriteEntry.COLUMN_NAME_RATING, mMovie.getRating());
+        values.put(FavoriteEntry.COLUMN_NAME_RELEASE_DATE, mMovie.getReleaseDate());
+        values.put(FavoriteEntry.COLUMN_NAME_POSTER_URL, mMovie.getPosterUrl());
+
+        Uri newUri = getContentResolver().insert(FavoriteEntry.CONTENT_URI, values);
+
+        long newRowId = ContentUris.parseId(newUri);
+        Toast.makeText(this, getString(R.string.movie_saved, newRowId), Toast.LENGTH_SHORT).show();
     }
 
     @Override
