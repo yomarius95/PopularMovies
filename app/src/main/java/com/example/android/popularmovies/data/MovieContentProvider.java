@@ -77,6 +77,12 @@ public class MovieContentProvider extends ContentProvider{
 
     private Uri insertMovie(Uri uri, ContentValues contentValues){
 
+        Integer id = contentValues.getAsInteger(FavoriteEntry._ID);
+        Log.i("insertMovie", String.valueOf(id));
+        if(id == null){
+            throw new IllegalArgumentException("Movie requires a valid id");
+        }
+
         String title = contentValues.getAsString(FavoriteEntry.COLUMN_NAME_TITLE);
         if(title == null) {
             throw new IllegalArgumentException("Movie requires a title");
@@ -106,10 +112,10 @@ public class MovieContentProvider extends ContentProvider{
         SQLiteDatabase database = movieDbHelper.getWritableDatabase();
 
         // Insert the new pet with the given values
-        long id = database.insert(FavoriteEntry.TABLE_NAME, null, contentValues);
+        long rowId = database.insert(FavoriteEntry.TABLE_NAME, null, contentValues);
 
         // If the ID is -1, then the insertion failed. Log an error and return null.
-        if(id == -1) {
+        if(rowId == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
@@ -117,7 +123,7 @@ public class MovieContentProvider extends ContentProvider{
         getContext().getContentResolver().notifyChange(uri, null);
 
         // Return the new URI with the ID (of the newly inserted row) appended at the end
-        return ContentUris.withAppendedId(uri, id);
+        return ContentUris.withAppendedId(uri, rowId);
     }
 
     @Override

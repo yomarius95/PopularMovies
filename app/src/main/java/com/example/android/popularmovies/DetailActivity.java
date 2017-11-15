@@ -180,6 +180,7 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
 
     private void saveMovie() {
         ContentValues values = new ContentValues();
+        values.put(FavoriteEntry._ID, Integer.parseInt(mMovie.getId()));
         values.put(FavoriteEntry.COLUMN_NAME_TITLE, mMovie.getTitle());
         values.put(FavoriteEntry.COLUMN_NAME_SYNOPSIS, mMovie.getSynopsis());
         values.put(FavoriteEntry.COLUMN_NAME_RATING, mMovie.getRating());
