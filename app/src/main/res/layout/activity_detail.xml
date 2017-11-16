@@ -96,7 +96,7 @@
                 android:layout_marginLeft="0dp"
                 android:layout_marginRight="0dp"
                 android:layout_marginTop="8dp"
-                android:background="#B3FFFFFF"
+                android:background="@android:color/white"
                 android:elevation="4dp"
                 android:focusableInTouchMode="true"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -108,7 +108,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="#B3FFFFFF"
+                android:background="@android:color/white"
                 android:elevation="4dp"
                 android:focusableInTouchMode="true"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -117,5 +117,4 @@
 
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
-
 </android.support.constraint.ConstraintLayout>

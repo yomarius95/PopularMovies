@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 String releaseDate = cursor.getString(releaseDateColumnIndex);
                 String posterUrl = cursor.getString(posterUrlColumnIndex);
 
-                Movie movie = new Movie(String.valueOf(id), title, synopsis, rating, releaseDate, posterUrl);
+                Movie movie = new Movie(String.valueOf(id), title, posterUrl, synopsis, rating, releaseDate);
                 movieList.add(movie);
             }
 
