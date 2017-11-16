@@ -26,7 +26,7 @@ public class MovieDbHelper extends SQLiteOpenHelper{
                 FavoriteEntry.COLUMN_NAME_SYNOPSIS + " TEXT NOT NULL," +
                 FavoriteEntry.COLUMN_NAME_RATING + " TEXT NOT NULL," +
                 FavoriteEntry.COLUMN_NAME_RELEASE_DATE + " TEXT NOT NULL," +
-                FavoriteEntry.COLUMN_NAME_POSTER_URL + " TEXT NOT NULL" +
+                FavoriteEntry.COLUMN_NAME_POSTER_URL + " BLOB NOT NULL" +
                 ");";
 
         sqLiteDatabase.execSQL(SQL_CREATE_FAVORITES_TABLE);

@@ -3,6 +3,9 @@ package com.example.android.popularmovies;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.app.LoaderManager;
 import android.content.Loader;
@@ -10,7 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,17 +22,23 @@ import android.widget.Toast;
 
 import com.example.android.popularmovies.data.MovieContract.*;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+
 import java.util.ArrayList;
 import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import static com.example.android.popularmovies.MainActivity.MOVIE_OBJECT_STRING;
+import static com.example.android.popularmovies.MainActivity.SELECTED_LIST_STRING;
 
 public class DetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerItemClickListener {
 
     private String movieId;
     private boolean isFavorite = false;
     private Movie mMovie;
+    private Uri currentMovieUri;
+    private int selectedList;
+    private Bitmap posterBitmap;
 
     private static final int REVIEWS_LOADER_ID = 3;
     private static final int TRAILERS_LOADER_ID = 4;
@@ -117,44 +125,69 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
 
         ButterKnife.bind(this);
 
-        mTrailerRV.setNestedScrollingEnabled(false);
-        mReviewRV.setNestedScrollingEnabled(false);
-
-        mTrailerRV.setLayoutManager(new LinearLayoutManager(this));
-        mReviewRV.setLayoutManager(new LinearLayoutManager(this));
-
-        mTrailerAdapter = new TrailerAdapter(this);
-        mReviewAdapter = new ReviewAdapter();
-
-        mTrailerRV.setAdapter(mTrailerAdapter);
-        mReviewRV.setAdapter(mReviewAdapter);
-
         Intent intent = getIntent();
         if(intent != null && intent.hasExtra(MOVIE_OBJECT_STRING)) {
 
             mMovie = intent.getExtras().getParcelable(MOVIE_OBJECT_STRING);
+            selectedList = intent.getExtras().getInt(SELECTED_LIST_STRING);
             assert mMovie != null;
             setTitle(mMovie.getTitle());
             movieId = mMovie.getId();
+            currentMovieUri = ContentUris.withAppendedId(FavoriteEntry.CONTENT_URI, Integer.parseInt(movieId));
+        }
+
+        if(selectedList != 2){
+            mTrailerRV.setNestedScrollingEnabled(false);
+            mReviewRV.setNestedScrollingEnabled(false);
+
+            mTrailerRV.setLayoutManager(new LinearLayoutManager(this));
+            mReviewRV.setLayoutManager(new LinearLayoutManager(this));
+
+            mTrailerAdapter = new TrailerAdapter(this);
+            mReviewAdapter = new ReviewAdapter();
+
+            mTrailerRV.setAdapter(mTrailerAdapter);
+            mReviewRV.setAdapter(mReviewAdapter);
 
             getLoaderManager().initLoader(TRAILERS_LOADER_ID, null, trailerLoaderListener);
             getLoaderManager().initLoader(REVIEWS_LOADER_ID, null, reviewLoaderListener);
 
-            Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);
+            //Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);
+            Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(new Target() {
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    posterBitmap = bitmap;
+                    background.setImageBitmap(bitmap);
+                }
 
-            title.setText(mMovie.getTitle());
-            releaseDate.append(" " + mMovie.getReleaseDate());
-            voteAverage.append(" " + mMovie.getRating());
-            synopsis.setText(mMovie.getSynopsis());
+                @Override
+                public void onBitmapFailed(Drawable errorDrawable) {
 
-            Log.i("DetailActivity.java", mMovie.getId());
+                }
+
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                }
+            });
+        } else {
+            background.setImageBitmap(DbBitmapUtility.getImage(mMovie.getPosterByteArray()));
         }
 
+        title.setText(mMovie.getTitle());
+        releaseDate.append(" " + mMovie.getReleaseDate());
+        voteAverage.append(" " + mMovie.getRating());
+        synopsis.setText(mMovie.getSynopsis());
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.favorite_menu, menu);
+        if(isMovieFavorite()){
+            menu.getItem(0).setIcon(R.drawable.ic_favorite_white_24dp);
+        } else {
+            menu.getItem(0).setIcon(R.drawable.ic_favorite_border_white_24dp);
+        }
         return true;
     }
 
@@ -165,6 +198,7 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
                 if (isFavorite) {
                     isFavorite = false;
                     item.setIcon(R.drawable.ic_favorite_border_white_24dp);
+                    deleteMovie();
                     //remove from database
                 } else {
                     isFavorite = true;
@@ -185,7 +219,7 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
         values.put(FavoriteEntry.COLUMN_NAME_SYNOPSIS, mMovie.getSynopsis());
         values.put(FavoriteEntry.COLUMN_NAME_RATING, mMovie.getRating());
         values.put(FavoriteEntry.COLUMN_NAME_RELEASE_DATE, mMovie.getReleaseDate());
-        values.put(FavoriteEntry.COLUMN_NAME_POSTER_URL, mMovie.getPosterUrl());
+        values.put(FavoriteEntry.COLUMN_NAME_POSTER_URL, DbBitmapUtility.getBytes(posterBitmap));
 
         Uri newUri = getContentResolver().insert(FavoriteEntry.CONTENT_URI, values);
 
@@ -193,9 +227,23 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
         Toast.makeText(this, getString(R.string.movie_saved, newRowId), Toast.LENGTH_SHORT).show();
     }
 
+    private void deleteMovie() {
+        getContentResolver().delete(currentMovieUri, null, null);
+    }
+
     @Override
     public void onTrailerItemClick(String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(intent);
+    }
+
+    private boolean isMovieFavorite(){
+        Cursor cursor = getContentResolver().query(currentMovieUri, null, null, null, null);
+        if(cursor.moveToNext()){
+            isFavorite = true;
+        } else {
+            isFavorite = false;
+        }
+        return isFavorite;
     }
 }

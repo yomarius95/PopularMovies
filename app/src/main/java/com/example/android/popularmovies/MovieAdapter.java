@@ -1,7 +1,9 @@
 package com.example.android.popularmovies;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +40,12 @@ class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieAdapterViewHol
 
     @Override
     public void onBindViewHolder(MovieAdapterViewHolder holder, int position) {
-        Picasso.with(mContext).load("http://image.tmdb.org/t/p/w500" + mMovies.get(position).getPosterUrl()).into(holder.mImageView);
+        String posterUrl = mMovies.get(position).getPosterUrl();
+        if(TextUtils.isEmpty(posterUrl)){
+            holder.mImageView.setImageBitmap(DbBitmapUtility.getImage(mMovies.get(position).getPosterByteArray()));
+        } else {
+            Picasso.with(mContext).load("http://image.tmdb.org/t/p/w500" + mMovies.get(position).getPosterUrl()).into(holder.mImageView);
+        }
     }
 
     @Override
