@@ -10,6 +10,7 @@ public class Movie implements Parcelable {
     private String mSynopsis;
     private String mRating;
     private String mReleaseDate;
+    private byte[] mPosterByteArray;
 
     Movie(String id, String title, String posterUrl, String synopsis, String rating, String releaseDate) {
         mId = id;
@@ -18,6 +19,17 @@ public class Movie implements Parcelable {
         mSynopsis = synopsis;
         mRating = rating;
         mReleaseDate = releaseDate;
+        mPosterByteArray = null;
+    }
+
+    Movie(String id, String title, String synopsis, String rating, String releaseDate, byte[] posterByteArray) {
+        mId = id;
+        mTitle = title;
+        mPosterUrl = null;
+        mSynopsis = synopsis;
+        mRating = rating;
+        mReleaseDate = releaseDate;
+        mPosterByteArray = posterByteArray;
     }
 
     public String getId() {
@@ -44,6 +56,10 @@ public class Movie implements Parcelable {
         return mReleaseDate;
     }
 
+    public byte[] getPosterByteArray() {
+        return mPosterByteArray;
+    }
+
     private Movie(Parcel in) {
         mId = in.readString();
         mTitle = in.readString();
@@ -51,6 +67,12 @@ public class Movie implements Parcelable {
         mSynopsis = in.readString();
         mRating = in.readString();
         mReleaseDate = in.readString();
+        boolean isPresent = in.readByte() == 1;
+        if (isPresent){
+            mPosterByteArray = new byte[in.readInt()];
+            in.readByteArray(mPosterByteArray);
+        }
+
     }
 
     @Override
@@ -66,6 +88,11 @@ public class Movie implements Parcelable {
         dest.writeString(mSynopsis);
         dest.writeString(mRating);
         dest.writeString(mReleaseDate);
+        dest.writeByte((byte)(mPosterByteArray != null ? 1 : 0));
+        if (mPosterByteArray != null){
+            dest.writeInt(mPosterByteArray.length);
+            dest.writeByteArray(mPosterByteArray);
+        }
     }
 
     @SuppressWarnings("unused")
