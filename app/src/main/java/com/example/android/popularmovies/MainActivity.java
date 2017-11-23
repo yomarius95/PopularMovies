@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private static final String POPULAR_REQUEST_URL = "https://api.themoviedb.org/3/movie/popular";
     private static final String API_KEY_KEY = "api_key";
     public static final String MOVIE_OBJECT_STRING = "movie";
-    public static final String SELECTED_LIST_STRING = "selectedList";
     private static final int MOVIES_LOADER_ID = 1;
     private static final int FAVORITES_LOADER_ID = 2;
     private static final String SORT_BY = "sort";
@@ -48,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private NetworkInfo activeNetwork;
     private MovieAdapter mMovieAdapter;
     private int spinnerPosition = -1;
-    private int selectedList;
     private Spinner spinner;
 
     @BindView(R.id.loading_spinner)
@@ -169,27 +167,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                boolean loadFavorites = false;
+
                 switch (i) {
-                    case 0:
-                        selectedList = 0;
-                        break;
                     case 1:
-                        selectedList = 1;
                         sortByRating = true;
                         break;
                     case 2:
-                        selectedList = 2;
-                        emptyView.setVisibility(View.GONE);
-                        loadingSpinner.setVisibility(View.VISIBLE);
-                        loaderManager.initLoader(FAVORITES_LOADER_ID, null, favoritesLoaderListener);
-                        return;
+                        loadFavorites = true;
+                        break;
                     default:
-                        selectedList = -1;
                         sortByRating = false;
                         break;
                 }
                 activeNetwork = cm.getActiveNetworkInfo();
-                if(activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+                if(loadFavorites){
+                    emptyView.setVisibility(View.GONE);
+                    loadingSpinner.setVisibility(View.VISIBLE);
+                    loaderManager.restartLoader(FAVORITES_LOADER_ID, null, favoritesLoaderListener);
+                } else if(activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
                     emptyView.setVisibility(View.GONE);
                     loadingSpinner.setVisibility(View.VISIBLE);
                     loaderManager.restartLoader(MOVIES_LOADER_ID, null, MainActivity.this);
@@ -243,7 +239,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public void onMovieItemClick(Movie clickedMovie, ImageView sharedImageView) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(MOVIE_OBJECT_STRING, clickedMovie);
-        intent.putExtra(SELECTED_LIST_STRING, selectedList);
         Bundle bundle = ActivityOptions
                 .makeSceneTransitionAnimation(
                         this,

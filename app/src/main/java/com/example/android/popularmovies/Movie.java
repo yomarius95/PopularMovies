@@ -67,12 +67,6 @@ public class Movie implements Parcelable {
         mSynopsis = in.readString();
         mRating = in.readString();
         mReleaseDate = in.readString();
-        boolean isPresent = in.readByte() == 1;
-        if (isPresent){
-            mPosterByteArray = new byte[in.readInt()];
-            in.readByteArray(mPosterByteArray);
-        }
-
     }
 
     @Override
@@ -88,11 +82,6 @@ public class Movie implements Parcelable {
         dest.writeString(mSynopsis);
         dest.writeString(mRating);
         dest.writeString(mReleaseDate);
-        dest.writeByte((byte)(mPosterByteArray != null ? 1 : 0));
-        if (mPosterByteArray != null){
-            dest.writeInt(mPosterByteArray.length);
-            dest.writeByteArray(mPosterByteArray);
-        }
     }
 
     @SuppressWarnings("unused")

@@ -2,6 +2,7 @@ package com.example.android.popularmovies;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -28,18 +29,18 @@ import java.util.ArrayList;
 import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import static com.example.android.popularmovies.MainActivity.MOVIE_OBJECT_STRING;
-import static com.example.android.popularmovies.MainActivity.SELECTED_LIST_STRING;
 
-public class DetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerItemClickListener {
+import static com.example.android.popularmovies.MainActivity.MOVIE_OBJECT_STRING;
+
+public class DetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerItemClickListener, LoaderManager.LoaderCallbacks<Cursor>{
 
     private String movieId;
     private boolean isFavorite = false;
     private Movie mMovie;
     private Uri currentMovieUri;
-    private int selectedList;
     private Bitmap posterBitmap;
 
+    private static final int FAVORITE_LOADER_ID = 2;
     private static final int REVIEWS_LOADER_ID = 3;
     private static final int TRAILERS_LOADER_ID = 4;
 
@@ -129,49 +130,47 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
         if(intent != null && intent.hasExtra(MOVIE_OBJECT_STRING)) {
 
             mMovie = intent.getExtras().getParcelable(MOVIE_OBJECT_STRING);
-            selectedList = intent.getExtras().getInt(SELECTED_LIST_STRING);
             assert mMovie != null;
             setTitle(mMovie.getTitle());
             movieId = mMovie.getId();
             currentMovieUri = ContentUris.withAppendedId(FavoriteEntry.CONTENT_URI, Integer.parseInt(movieId));
-        }
 
-        if(selectedList != 2){
-            mTrailerRV.setNestedScrollingEnabled(false);
-            mReviewRV.setNestedScrollingEnabled(false);
+            if(mMovie.getPosterUrl() == null){
+                getLoaderManager().initLoader(FAVORITE_LOADER_ID, null, this);
+            } else {
+                mTrailerRV.setNestedScrollingEnabled(false);
+                mReviewRV.setNestedScrollingEnabled(false);
 
-            mTrailerRV.setLayoutManager(new LinearLayoutManager(this));
-            mReviewRV.setLayoutManager(new LinearLayoutManager(this));
+                mTrailerRV.setLayoutManager(new LinearLayoutManager(this));
+                mReviewRV.setLayoutManager(new LinearLayoutManager(this));
 
-            mTrailerAdapter = new TrailerAdapter(this);
-            mReviewAdapter = new ReviewAdapter();
+                mTrailerAdapter = new TrailerAdapter(this);
+                mReviewAdapter = new ReviewAdapter();
 
-            mTrailerRV.setAdapter(mTrailerAdapter);
-            mReviewRV.setAdapter(mReviewAdapter);
+                mTrailerRV.setAdapter(mTrailerAdapter);
+                mReviewRV.setAdapter(mReviewAdapter);
 
-            getLoaderManager().initLoader(TRAILERS_LOADER_ID, null, trailerLoaderListener);
-            getLoaderManager().initLoader(REVIEWS_LOADER_ID, null, reviewLoaderListener);
+                getLoaderManager().initLoader(TRAILERS_LOADER_ID, null, trailerLoaderListener);
+                getLoaderManager().initLoader(REVIEWS_LOADER_ID, null, reviewLoaderListener);
 
-            //Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(background);
-            Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(new Target() {
-                @Override
-                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                    posterBitmap = bitmap;
-                    background.setImageBitmap(bitmap);
-                }
+                Picasso.with(this).load("http://image.tmdb.org/t/p/w500" + mMovie.getPosterUrl()).into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        posterBitmap = bitmap;
+                        background.setImageBitmap(bitmap);
+                    }
 
-                @Override
-                public void onBitmapFailed(Drawable errorDrawable) {
+                    @Override
+                    public void onBitmapFailed(Drawable errorDrawable) {
 
-                }
+                    }
 
-                @Override
-                public void onPrepareLoad(Drawable placeHolderDrawable) {
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {
 
-                }
-            });
-        } else {
-            background.setImageBitmap(DbBitmapUtility.getImage(mMovie.getPosterByteArray()));
+                    }
+                });
+            }
         }
 
         title.setText(mMovie.getTitle());
@@ -199,11 +198,9 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
                     isFavorite = false;
                     item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                     deleteMovie();
-                    //remove from database
                 } else {
                     isFavorite = true;
                     item.setIcon(R.drawable.ic_favorite_white_24dp);
-                    //insert in to database
                     saveMovie();
                 }
 
@@ -245,5 +242,34 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
             isFavorite = false;
         }
         return isFavorite;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        String[] projection = {
+                FavoriteEntry._ID,
+                FavoriteEntry.COLUMN_NAME_POSTER_URL
+        };
+
+        return new CursorLoader(this,
+                currentMovieUri,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        if (cursor.moveToNext()){
+            int posterColumnIndex = cursor.getColumnIndex(FavoriteEntry.COLUMN_NAME_POSTER_URL);
+            byte[] array = cursor.getBlob(posterColumnIndex);
+            background.setImageBitmap(DbBitmapUtility.getImage(array));
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        background.setImageBitmap(null);
     }
 }
