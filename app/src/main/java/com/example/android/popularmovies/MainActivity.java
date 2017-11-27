@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -252,5 +253,30 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(SORT_BY, spinner.getSelectedItemPosition());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadPreferences();
+        invalidateOptionsMenu();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        savePreferences();
+    }
+
+    private void savePreferences(){
+        SharedPreferences spinnerPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = spinnerPreferences.edit();
+        editor.putInt(SORT_BY, spinner.getSelectedItemPosition());
+        editor.apply();
+    }
+
+    private void loadPreferences(){
+        SharedPreferences spinnerPreferences = getPreferences(MODE_PRIVATE);
+        spinnerPosition = spinnerPreferences.getInt(SORT_BY, -1);
     }
 }

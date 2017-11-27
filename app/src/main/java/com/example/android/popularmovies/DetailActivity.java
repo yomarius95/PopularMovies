@@ -39,67 +39,14 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
     private Movie mMovie;
     private Uri currentMovieUri;
     private Bitmap posterBitmap;
+    private boolean hideMenu = false;
+    private String share_url;
 
     private static final int FAVORITE_LOADER_ID = 2;
     private static final int REVIEWS_LOADER_ID = 3;
     private static final int TRAILERS_LOADER_ID = 4;
 
     private static final String BASE_REQUEST_URL = "https://api.themoviedb.org/3/movie";
-
-    private LoaderManager.LoaderCallbacks<List<Review>> reviewLoaderListener
-            = new LoaderManager.LoaderCallbacks<List<Review>>() {
-        @Override
-        public Loader<List<Review>> onCreateLoader(int id, Bundle args) {
-            Uri baseUri;
-            baseUri = Uri.parse(BASE_REQUEST_URL);
-            Uri.Builder uriBuilder = baseUri.buildUpon();
-
-            uriBuilder.appendPath(movieId);
-            uriBuilder.appendPath("reviews");
-            uriBuilder.appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DB_API_TOKEN);
-
-            return new ReviewLoader(DetailActivity.this, uriBuilder.toString());
-        }
-
-        @Override
-        public void onLoadFinished(Loader<List<Review>> loader, List<Review> reviews) {
-            mReviewAdapter.setReviewData((ArrayList<Review>) reviews);
-            mReviewRV.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public void onLoaderReset(Loader<List<Review>> loader) {
-            mReviewAdapter.resetReviewData();
-        }
-    };
-
-    private LoaderManager.LoaderCallbacks<List<Trailer>> trailerLoaderListener
-            = new LoaderManager.LoaderCallbacks<List<Trailer>>() {
-        @Override
-        public Loader<List<Trailer>> onCreateLoader(int id, Bundle args) {
-
-            Uri baseUri;
-            baseUri = Uri.parse(BASE_REQUEST_URL);
-            Uri.Builder uriBuilder = baseUri.buildUpon();
-
-            uriBuilder.appendPath(movieId);
-            uriBuilder.appendPath("videos");
-            uriBuilder.appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DB_API_TOKEN);
-
-            return new TrailerLoader(DetailActivity.this, uriBuilder.toString());
-        }
-
-        @Override
-        public void onLoadFinished(Loader<List<Trailer>> loader, List<Trailer> trailers) {
-            mTrailerAdapter.setTrailerData((ArrayList<Trailer>) trailers);
-            mTrailerRV.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public void onLoaderReset(Loader<List<Trailer>> loader) {
-            mTrailerAdapter.resetTrailerData();
-        }
-    };
 
     private TrailerAdapter mTrailerAdapter;
     private ReviewAdapter mReviewAdapter;
@@ -136,6 +83,9 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
             currentMovieUri = ContentUris.withAppendedId(FavoriteEntry.CONTENT_URI, Integer.parseInt(movieId));
 
             if(mMovie.getPosterUrl() == null){
+                hideMenu = true;
+                mTrailerRV.setVisibility(View.GONE);
+                mReviewRV.setVisibility(View.GONE);
                 getLoaderManager().initLoader(FAVORITE_LOADER_ID, null, this);
             } else {
                 mTrailerRV.setNestedScrollingEnabled(false);
@@ -187,6 +137,7 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
         } else {
             menu.getItem(0).setIcon(R.drawable.ic_favorite_border_white_24dp);
         }
+        if(hideMenu) menu.getItem(1).setVisible(false);
         return true;
     }
 
@@ -203,6 +154,17 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
                     item.setIcon(R.drawable.ic_favorite_white_24dp);
                     saveMovie();
                 }
+                return true;
+
+            case R.id.share_trailer:
+                Intent intent = new Intent(Intent.ACTION_SEND);
+
+                intent.setType("text/plain");
+
+                intent.putExtra(Intent.EXTRA_TEXT, share_url);
+
+                startActivity(Intent.createChooser(intent, "Share"));
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -272,4 +234,59 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
     public void onLoaderReset(Loader<Cursor> loader) {
         background.setImageBitmap(null);
     }
+    private LoaderManager.LoaderCallbacks<List<Review>> reviewLoaderListener
+            = new LoaderManager.LoaderCallbacks<List<Review>>() {
+        @Override
+        public Loader<List<Review>> onCreateLoader(int id, Bundle args) {
+            Uri baseUri;
+            baseUri = Uri.parse(BASE_REQUEST_URL);
+            Uri.Builder uriBuilder = baseUri.buildUpon();
+
+            uriBuilder.appendPath(movieId);
+            uriBuilder.appendPath("reviews");
+            uriBuilder.appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DB_API_TOKEN);
+
+            return new ReviewLoader(DetailActivity.this, uriBuilder.toString());
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Review>> loader, List<Review> reviews) {
+            mReviewAdapter.setReviewData((ArrayList<Review>) reviews);
+            mReviewRV.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Review>> loader) {
+            mReviewAdapter.resetReviewData();
+        }
+    };
+
+    private LoaderManager.LoaderCallbacks<List<Trailer>> trailerLoaderListener
+            = new LoaderManager.LoaderCallbacks<List<Trailer>>() {
+        @Override
+        public Loader<List<Trailer>> onCreateLoader(int id, Bundle args) {
+
+            Uri baseUri;
+            baseUri = Uri.parse(BASE_REQUEST_URL);
+            Uri.Builder uriBuilder = baseUri.buildUpon();
+
+            uriBuilder.appendPath(movieId);
+            uriBuilder.appendPath("videos");
+            uriBuilder.appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DB_API_TOKEN);
+
+            return new TrailerLoader(DetailActivity.this, uriBuilder.toString());
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Trailer>> loader, List<Trailer> trailers) {
+            share_url = trailers.get(0).getUrl();
+            mTrailerAdapter.setTrailerData((ArrayList<Trailer>) trailers);
+            mTrailerRV.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Trailer>> loader) {
+            mTrailerAdapter.resetTrailerData();
+        }
+    };
 }
