@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -157,13 +158,17 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
                 return true;
 
             case R.id.share_trailer:
-                Intent intent = new Intent(Intent.ACTION_SEND);
+                if(TextUtils.isEmpty(share_url)){
+                    Toast.makeText(this, "No trailer to share!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_SEND);
 
-                intent.setType("text/plain");
+                    intent.setType("text/plain");
 
-                intent.putExtra(Intent.EXTRA_TEXT, share_url);
+                    intent.putExtra(Intent.EXTRA_TEXT, share_url);
 
-                startActivity(Intent.createChooser(intent, "Share"));
+                    startActivity(Intent.createChooser(intent, "Share"));
+                }
                 return true;
 
             default:
@@ -198,11 +203,11 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
 
     private boolean isMovieFavorite(){
         Cursor cursor = getContentResolver().query(currentMovieUri, null, null, null, null);
-        if(cursor.moveToNext()){
-            isFavorite = true;
-        } else {
-            isFavorite = false;
+        if (cursor != null) {
+            isFavorite = cursor.moveToNext();
+            cursor.close();
         }
+
         return isFavorite;
     }
 
@@ -251,8 +256,10 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
 
         @Override
         public void onLoadFinished(Loader<List<Review>> loader, List<Review> reviews) {
-            mReviewAdapter.setReviewData((ArrayList<Review>) reviews);
-            mReviewRV.setVisibility(View.VISIBLE);
+            if(reviews.size() != 0){
+                mReviewAdapter.setReviewData((ArrayList<Review>) reviews);
+                mReviewRV.setVisibility(View.VISIBLE);
+            }
         }
 
         @Override
@@ -279,9 +286,13 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
 
         @Override
         public void onLoadFinished(Loader<List<Trailer>> loader, List<Trailer> trailers) {
-            share_url = trailers.get(0).getUrl();
-            mTrailerAdapter.setTrailerData((ArrayList<Trailer>) trailers);
-            mTrailerRV.setVisibility(View.VISIBLE);
+            if(trailers.size() != 0){
+                share_url = trailers.get(0).getUrl();
+                mTrailerAdapter.setTrailerData((ArrayList<Trailer>) trailers);
+                mTrailerRV.setVisibility(View.VISIBLE);
+            } else {
+                hideMenu = true;
+            }
         }
 
         @Override
